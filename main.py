@@ -3,9 +3,10 @@ from PIL import Image
 from transformers import Blip2ForConditionalGeneration, Blip2Processor
 
 # Good descriptive model; swap to base for CPU if needed
-# MODEL_ID = "Salesforce/blip2-flan-t5-xl"  # heavy, highest quality
-MODEL_ID = "Salesforce/blip2-flan-t5-base"  # lighter/faster
-# MODEL_ID = "Salesforce/instructblip-flan-t5-xl"  # better at following prompts
+# MODEL_ID = "Salesforce/blip2-flan-t5-xl"  # heavy, highest quality, requires auth
+# MODEL_ID = "Salesforce/blip2-flan-t5-base"  # lighter/faster, requires auth
+# MODEL_ID = "Salesforce/instructblip-flan-t5-xl"  # better at following prompts, requires auth
+MODEL_ID = "Salesforce/blip2-opt-2.7b"  # No auth required
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 dtype = torch.float16 if device == "cuda" else torch.float32
