@@ -22,8 +22,7 @@ model = LlavaNextForConditionalGeneration.from_pretrained(
 image = Image.open("assets/screenshot.png").convert("RGB")
 
 # LLaVA excels at following detailed instructions
-prompt = """<image>
-You are a luxury real estate agent providing a detailed property description. Analyze this interior space with meticulous attention to detail:
+prompt = """You are a luxury real estate agent providing a detailed property description. Analyze this interior space with meticulous attention to detail:
 
 **Architectural Features**: Ceiling height, crown molding, baseboards, window treatments, flooring type and condition, wall textures, built-ins, archways, columns
 
@@ -45,7 +44,7 @@ You are a luxury real estate agent providing a detailed property description. An
 
 Write multiple detailed paragraphs painting a vivid picture that would help someone visualize this space without seeing it."""
 
-inputs = processor(prompt, image, return_tensors="pt").to(device)
+inputs = processor(text=prompt, images=image, return_tensors="pt").to(device)
 
 print("Generating detailed description...")
 with torch.no_grad():
