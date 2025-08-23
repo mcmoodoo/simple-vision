@@ -44,9 +44,11 @@ query = f"Human: {prompt}\nAssistant:"
 inputs = model.build_conversation_input_ids(
     tokenizer,
     query=query,
-    images=[image],
-    device=device
+    images=[image]
 )
+
+# Move inputs to device
+inputs = {k: v.to(device) for k, v in inputs.items()}
 
 print("Generating detailed description...")
 with torch.no_grad():
