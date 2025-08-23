@@ -21,8 +21,9 @@ model = LlavaNextForConditionalGeneration.from_pretrained(
 
 image = Image.open("assets/screenshot.png").convert("RGB")
 
-# LLaVA excels at following detailed instructions
-prompt = """You are a luxury real estate agent providing a detailed property description. Analyze this interior space with meticulous attention to detail:
+# LLaVA needs the special <image> token in the prompt
+prompt = """<image>
+You are a luxury real estate agent providing a detailed property description. Analyze this interior space with meticulous attention to detail:
 
 **Architectural Features**: Ceiling height, crown molding, baseboards, window treatments, flooring type and condition, wall textures, built-ins, archways, columns
 
@@ -44,7 +45,20 @@ prompt = """You are a luxury real estate agent providing a detailed property des
 
 Write multiple detailed paragraphs painting a vivid picture that would help someone visualize this space without seeing it."""
 
-inputs = processor(text=prompt, images=image, return_tensors="pt").to(device)
+# Create conversation format for LLaVA
+conversation = [
+    {
+        "role": "user",
+        "content": [
+            {"type": "text", "text": prompt},
+            {"type": "image"},
+        ],
+    },
+]
+
+# Apply chat template and process
+prompt_text = processor.apply_chat_template(conversation, add_generation_prompt=True)
+inputs = processor(images=image, text=prompt_text, return_tensors="pt").to(device)
 
 print("Generating detailed description...")
 with torch.no_grad():
