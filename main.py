@@ -23,7 +23,7 @@ print("Model loaded successfully!")
 # (In this chat upload it was: /mnt/data/7 (2).png — on your machine, use your local path)
 image = Image.open("assets/Vacation_checkout_page.png").convert("RGB")
 
-prompt = "Question: What is shown in this image? Answer:"
+prompt = "Question: Describe everything you see in this image in great detail. What objects are present? What text is visible? What are the colors? What is the layout? Provide a comprehensive description. Answer:"
 
 print(f"Processing image with prompt...")
 inputs = processor(images=image, text=prompt, return_tensors="pt").to(
@@ -33,10 +33,11 @@ inputs = processor(images=image, text=prompt, return_tensors="pt").to(
 print("Generating caption...")
 generated_ids = model.generate(
     **inputs,
-    max_new_tokens=256,  # ↑ for longer descriptions
-    num_beams=3,  # beam search for quality
-    temperature=0.9,
+    max_new_tokens=1024,  # Maximum tokens for longest possible description
+    num_beams=5,  # Higher beam search for quality
+    temperature=0.7,
     do_sample=False,
+    min_length=100,  # Force longer outputs
 )
 
 print("Decoding output...")
