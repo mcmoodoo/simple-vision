@@ -47,8 +47,10 @@ inputs = model.build_conversation_input_ids(
     images=[image]
 )
 
-# Move inputs to device
-inputs = {k: v.to(device) for k, v in inputs.items()}
+# Move only tensor inputs to device
+for k, v in inputs.items():
+    if torch.is_tensor(v):
+        inputs[k] = v.to(device)
 
 print("Generating detailed description...")
 with torch.no_grad():
