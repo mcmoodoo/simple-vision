@@ -21,9 +21,9 @@ print("Model loaded successfully!")
 
 # Path to your image:
 # (In this chat upload it was: /mnt/data/7 (2).png — on your machine, use your local path)
-image = Image.open("assets/Vacation_checkout_page.png").convert("RGB")
+image = Image.open("assets/screenshot.png").convert("RGB")
 
-prompt = "Question: Describe everything you see in this image in great detail. What objects are present? What text is visible? What are the colors? What is the layout? Provide a comprehensive description. Answer:"
+prompt = "Question: Describe this property interior in vivid detail. What furniture is visible? What are the architectural features? Describe the lighting, colors, textures, materials, decor, and spatial arrangement. What style is the room? What mood does it convey? Answer:"
 
 print(f"Processing image with prompt...")
 inputs = processor(images=image, text=prompt, return_tensors="pt").to(

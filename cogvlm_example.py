@@ -20,21 +20,24 @@ model = AutoModelForCausalLM.from_pretrained(
     low_cpu_mem_usage=True
 )
 
-image = Image.open("assets/Vacation_checkout_page.png").convert("RGB")
+image = Image.open("assets/screenshot.png").convert("RGB")
 
-prompt = """Analyze this image with extreme attention to detail. Provide a comprehensive description that includes:
+prompt = """Provide an exhaustive interior design analysis of this property photo. Your description should read like a high-end architectural magazine feature:
 
-- Every piece of text visible (quote it exactly)
-- All UI elements and their arrangement
-- Color schemes and visual design
-- Form fields and their contents
-- Navigation elements
-- Prices, quantities, dates
-- Icons and graphics
-- The purpose and context of the page
-- Any subtle details or patterns
+Begin with the overall impression and atmosphere. Then systematically describe:
 
-Write multiple paragraphs covering different aspects of the image. Be as thorough as possible."""
+- The room's architectural bones: ceiling details, wall treatments, flooring materials, window configurations
+- Every furniture piece: manufacturer style, upholstery, wood finishes, proportions, placement
+- Lighting layers: how natural light enters, every fixture visible, shadows and highlights created
+- The complete color story: primary palette, accent colors, how colors interact and flow
+- Textiles and soft furnishings: fabric types, patterns, textures that add warmth
+- Art and accessories: what's on the walls, decorative objects, their arrangement and purpose
+- Material palette: identify wood species, stone types, metal finishes, glass elements
+- Spatial planning: traffic flow, conversation areas, focal points, use of negative space
+- Design style and era: specific style references, period details, contemporary vs traditional elements
+- Quality indicators: craftsmanship details, luxury materials, custom elements
+
+Write at least 4-5 substantial paragraphs with rich, descriptive language that captures every nuance."""
 
 # CogVLM2 specific formatting
 query = f"Human: {prompt}\nAssistant:"

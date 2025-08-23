@@ -19,24 +19,31 @@ model = LlavaNextForConditionalGeneration.from_pretrained(
     low_cpu_mem_usage=True
 )
 
-image = Image.open("assets/Vacation_checkout_page.png").convert("RGB")
+image = Image.open("assets/screenshot.png").convert("RGB")
 
 # LLaVA excels at following detailed instructions
 prompt = """<image>
-Please provide an extremely detailed description of this image. Include:
+You are a luxury real estate agent providing a detailed property description. Analyze this interior space with meticulous attention to detail:
 
-1. **Overall Layout**: Describe the page structure, sections, and visual hierarchy
-2. **Text Content**: Quote ALL visible text, headings, labels, buttons, prices, etc.
-3. **Visual Elements**: Icons, images, logos, graphics, and their positions
-4. **Colors**: Specific color schemes, backgrounds, text colors, button colors
-5. **Forms and Inputs**: All form fields, dropdowns, checkboxes, their labels and states
-6. **Navigation**: Menu items, breadcrumbs, links
-7. **Specific Details**: Product information, pricing, quantities, dates, any numbers
-8. **UI Components**: Cards, containers, dividers, spacing, alignment
-9. **Interactive Elements**: What appears clickable or editable
-10. **Context**: What type of page/application this appears to be
+**Architectural Features**: Ceiling height, crown molding, baseboards, window treatments, flooring type and condition, wall textures, built-ins, archways, columns
 
-Be exhaustive - describe every single element you can see, no matter how small."""
+**Furniture & Layout**: Every piece of furniture - sofas, chairs, tables, cabinets. Their style (modern, traditional, contemporary), materials (leather, fabric, wood type), colors, arrangement, spacing
+
+**Lighting Analysis**: Natural light sources, window placement and size, artificial lighting - chandeliers, lamps, recessed lights, sconces. Describe the quality and mood of lighting
+
+**Color Palette & Textures**: Wall colors, accent colors, textile patterns, surface finishes (matte, glossy, textured), metal finishes (brass, chrome, bronze)
+
+**Decorative Elements**: Artwork, mirrors, plants, vases, books, sculptures, rugs, pillows, throws. Note their placement and how they contribute to the aesthetic
+
+**Materials & Finishes**: Wood grains, stone types (marble, granite), fabric textures, glass elements, metal accents
+
+**Style & Ambiance**: Design style (minimalist, traditional, transitional, industrial), the mood created, target demographic, price point indication
+
+**Spatial Qualities**: Room dimensions feel, flow between spaces, sight lines, focal points, symmetry or asymmetry
+
+**Condition & Quality**: Signs of luxury, craftsmanship details, any wear or aging, maintenance level
+
+Write multiple detailed paragraphs painting a vivid picture that would help someone visualize this space without seeing it."""
 
 inputs = processor(prompt, image, return_tensors="pt").to(device)
 
