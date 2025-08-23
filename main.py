@@ -23,11 +23,7 @@ print("Model loaded successfully!")
 # (In this chat upload it was: /mnt/data/7 (2).png — on your machine, use your local path)
 image = Image.open("assets/Vacation_checkout_page.png").convert("RGB")
 
-prompt = (
-    "You are a meticulous vision assistant. Describe the image exhaustively: "
-    "objects, layout, text on screen, numbers, colors, relationships, scene context, "
-    "UI elements, and actions. Use short paragraphs and bullet points."
-)
+prompt = "Question: What is shown in this image? Answer:"
 
 print(f"Processing image with prompt...")
 inputs = processor(images=image, text=prompt, return_tensors="pt").to(
@@ -37,11 +33,10 @@ inputs = processor(images=image, text=prompt, return_tensors="pt").to(
 print("Generating caption...")
 generated_ids = model.generate(
     **inputs,
-    max_new_tokens=128,  # ↑ for longer descriptions
-    num_beams=1,  # beam search for quality; use 1 for speed
-    length_penalty=1.05,
-    repetition_penalty=1.05,
-    early_stopping=True,
+    max_new_tokens=256,  # ↑ for longer descriptions
+    num_beams=3,  # beam search for quality
+    temperature=0.9,
+    do_sample=False,
 )
 
 print("Decoding output...")
