@@ -21,9 +21,13 @@ model = LlavaNextForConditionalGeneration.from_pretrained(
 
 image = Image.open("assets/screenshot.png").convert("RGB")
 
-# LLaVA needs the special <image> token in the prompt
-prompt = """<image>
-You are a luxury real estate agent providing a detailed property description. Analyze this interior space with meticulous attention to detail:
+# LLaVA conversation format with proper template
+conversation = [
+    {
+        "role": "user",
+        "content": [
+            {"type": "image"},
+            {"type": "text", "text": """You are a luxury real estate agent providing a detailed property description. Analyze this interior space with meticulous attention to detail:
 
 **Architectural Features**: Ceiling height, crown molding, baseboards, window treatments, flooring type and condition, wall textures, built-ins, archways, columns
 
@@ -43,22 +47,14 @@ You are a luxury real estate agent providing a detailed property description. An
 
 **Condition & Quality**: Signs of luxury, craftsmanship details, any wear or aging, maintenance level
 
-Write multiple detailed paragraphs painting a vivid picture that would help someone visualize this space without seeing it."""
-
-# Create conversation format for LLaVA
-conversation = [
-    {
-        "role": "user",
-        "content": [
-            {"type": "text", "text": prompt},
-            {"type": "image"},
+Write multiple detailed paragraphs painting a vivid picture that would help someone visualize this space without seeing it."""},
         ],
     },
 ]
 
-# Apply chat template and process
-prompt_text = processor.apply_chat_template(conversation, add_generation_prompt=True)
-inputs = processor(images=image, text=prompt_text, return_tensors="pt").to(device)
+# Process with correct formatting
+prompt = processor.apply_chat_template(conversation, add_generation_prompt=True)
+inputs = processor(text=prompt, images=[image], return_tensors="pt").to(device)
 
 print("Generating detailed description...")
 with torch.no_grad():
@@ -70,7 +66,10 @@ with torch.no_grad():
         top_p=0.95,
     )
 
-description = processor.decode(output[0], skip_special_tokens=True)
+# Decode only the generated portion
+generated_tokens = output[0][inputs['input_ids'].shape[1]:]
+description = processor.decode(generated_tokens, skip_special_tokens=True)
+
 print(f"\n=== LLaVA Detailed Description ===\n{description}\n========================")
 
 with open("llava_description.txt", "w", encoding="utf-8") as f:
