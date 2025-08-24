@@ -52,7 +52,7 @@ def migrate_preprocessor_config():
                         config_data = json.load(f)
                     with open(new_config, "w") as f:
                         json.dump(config_data, f, indent=2)
-                    print(f"Config migrated successfully")
+                    print("Config migrated successfully")
 
 
 def process_video_with_qwen(video_path: str, fps: float = 1.0) -> str:
