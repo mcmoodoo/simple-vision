@@ -33,7 +33,7 @@ def download_video(url: str, output_path: str) -> str:
 
 def extract_frames_ffmpeg(
     video_path: str, fps: float = 1.0, max_resolution: int = 720
-) -> List[Image.Image]:
+) -> Tuple[List[Image.Image], List[float], float]:
     """Extract frames from video using ffmpeg at specified FPS and resolution"""
     frames = []
     temp_dir = tempfile.mkdtemp()
@@ -68,7 +68,7 @@ def extract_frames_ffmpeg(
             output_pattern,
         ]
 
-        subprocess.run(cmd, check=True, capture_output=True)
+        subprocess.run(cmd, check=True)
 
         # Load extracted frames
         frame_files = sorted(Path(temp_dir).glob("frame_*.jpg"))
@@ -99,15 +99,16 @@ def extract_frames_av(
 
     # Calculate frame interval
     fps_original = float(stream.average_rate)
-    frame_interval = int(fps_original / fps)
-    duration = float(stream.duration * stream.time_base)
+    frame_interval = max(1, int(round(fps_original / fps)))
+    if stream.duration is not None:
+        duration = float(stream.duration * stream.time_base)
+    elif container.duration is not None:
+        duration = float(container.duration / av.time_base)
+    else:
+        duration = 0.0
 
     print(f"Video duration: {duration:.2f} seconds")
-    print(
-        f"Original FPS: {fps_original:.2f}, extracting every {
-            frame_interval
-        } frames for {fps} FPS output"
-    )
+    print(f"Original FPS: {fps_original:.2f}, extracting every {frame_interval} frames for {fps} FPS output")
 
     frame_count = 0
     for frame in container.decode(stream):
@@ -140,9 +141,14 @@ def process_video_with_llava(
     print(f"Device: {device}, dtype: {dtype}")
 
     processor = LlavaNextVideoProcessor.from_pretrained(MODEL_ID)
-    model = LlavaNextVideoForConditionalGeneration.from_pretrained(
-        MODEL_ID, torch_dtype=dtype, device_map="auto" if device == "cuda" else None
-    ).to(device)
+    if device == "cuda":
+        model = LlavaNextVideoForConditionalGeneration.from_pretrained(
+            MODEL_ID, torch_dtype=dtype, device_map="auto"
+        )
+    else:
+        model = LlavaNextVideoForConditionalGeneration.from_pretrained(
+            MODEL_ID, torch_dtype=dtype
+        ).to(device)
 
     print("Model loaded successfully!")
 
@@ -171,7 +177,8 @@ Provide rich sensory details and precise observations for each timestamp."""
     # Process video frames with the model
     inputs = processor(
         text=prompt, videos=frames, return_tensors="pt", padding=True
-    ).to(device, dtype=dtype)
+    )
+    inputs = {k: v.to(device) if hasattr(v, 'to') else v for k, v in inputs.items()}
 
     print("Generating temporal description...")
 
