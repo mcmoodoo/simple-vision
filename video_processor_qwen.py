@@ -38,26 +38,26 @@ def download_video(url: str, output_path: str) -> str:
 def migrate_preprocessor_config():
     """Migrate preprocessor.json to video_preprocessor.json if needed"""
     cache_dir = Path.home() / ".cache" / "huggingface" / "hub"
-    
+
     # Find model cache directories
     for model_dir in cache_dir.glob("models--*"):
         if "Qwen2-VL" in model_dir.name:
             for snapshot_dir in model_dir.glob("snapshots/*"):
                 old_config = snapshot_dir / "preprocessor.json"
                 new_config = snapshot_dir / "video_preprocessor.json"
-                
+
                 if old_config.exists() and not new_config.exists():
                     print(f"Migrating {old_config} to {new_config}")
-                    with open(old_config, 'r') as f:
+                    with open(old_config, "r") as f:
                         config_data = json.load(f)
-                    with open(new_config, 'w') as f:
+                    with open(new_config, "w") as f:
                         json.dump(config_data, f, indent=2)
                     print(f"Config migrated successfully")
 
 
 def process_video_with_qwen(video_path: str, fps: float = 1.0) -> str:
     """Process video with Qwen2-VL model which has native video support"""
-    
+
     # Migrate config if needed
     migrate_preprocessor_config()
 
@@ -259,7 +259,9 @@ Be extremely precise and detailed.""",
 
 
 def main():
-    video_url = "https://mcmoodoo-playground.s3.us-east-1.amazonaws.com/super_hallway.mp4"
+    video_url = (
+        "https://mcmoodoo-playground.s3.us-east-1.amazonaws.com/super_hallway.mp4"
+    )
 
     # Download or use local video
     if video_url.startswith("http"):

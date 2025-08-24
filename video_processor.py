@@ -108,7 +108,9 @@ def extract_frames_av(
         duration = 0.0
 
     print(f"Video duration: {duration:.2f} seconds")
-    print(f"Original FPS: {fps_original:.2f}, extracting every {frame_interval} frames for {fps} FPS output")
+    print(
+        f"Original FPS: {fps_original:.2f}, extracting every {frame_interval} frames for {fps} FPS output"
+    )
 
     frame_count = 0
     for frame in container.decode(stream):
@@ -175,10 +177,8 @@ Provide rich sensory details and precise observations for each timestamp."""
     print("Processing video frames with model...")
 
     # Process video frames with the model
-    inputs = processor(
-        text=prompt, videos=frames, return_tensors="pt", padding=True
-    )
-    inputs = {k: v.to(device) if hasattr(v, 'to') else v for k, v in inputs.items()}
+    inputs = processor(text=prompt, videos=frames, return_tensors="pt", padding=True)
+    inputs = {k: v.to(device) if hasattr(v, "to") else v for k, v in inputs.items()}
 
     print("Generating temporal description...")
 
