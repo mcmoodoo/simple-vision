@@ -1,10 +1,12 @@
-accelerate>=1.10.0
-pillow>=11.3.0
-torch>=2.8.0
-torchvision>=0.23.0
+# accelerate>=1.10.0
+# pillow>=11.3.0
+# torch>=2.8.0
+# torchvision>=0.23.0
+# qwen-vl-utils>=0.0.8
+# sentencepiece>=0.2.0
+# av>=13.0.0
+# requests>=2.32.0
+# numpy>=1.26.0
+
+qwen_vl_utils
 transformers>=4.55.2
-qwen-vl-utils>=0.0.8
-sentencepiece>=0.2.0
-av>=13.0.0
-requests>=2.32.0
-numpy>=1.26.0
