@@ -85,25 +85,31 @@ def process_video_with_qwen(video_path: str, fps: float = 1.0) -> str:
                 },
                 {
                     "type": "text",
-                    "text": """Describe this video as a vivid, timestamped narrative story. 
+                    "text": """Describe this video with precise timestamps in seconds. 
 
-For every second of the video, provide:
-- [Xs] timestamp marker
+IMPORTANT: For each second of the video, provide descriptions in this exact format:
+[0s] - Description of what happens at second 0
+[1s] - Description of what happens at second 1
+[2s] - Description of what happens at second 2
+(continue for each second)
+
+For each timestamp include:
 - Camera movement and perspective
 - Detailed description of visible objects, architecture, people
 - Colors, lighting, textures, materials
-- Actions and movements
+- Actions and movements happening
 - Spatial relationships and depth
 - Any text, signs, or notable details
 
-Write it as a journey narrative, describing what the camera sees as it moves through the space.
-Be extremely precise and detailed for each timestamp.""",
+Write it as a temporal journey, describing exactly what the camera sees at each second mark.
+Be extremely precise - each timestamp should describe ONLY what is visible at that specific second.""",
                 },
             ],
         }
     ]
 
-    print("Processing video with model...")
+    print(f"Processing video with model (sampling at {fps} fps)...")
+    print(f"Timestamps will be in seconds [Ns] format")
 
     # Process with model
     text = processor.apply_chat_template(
