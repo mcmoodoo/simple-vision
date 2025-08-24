@@ -13,10 +13,7 @@ print(f"Device: {device}, dtype: {dtype}")
 
 processor = LlavaNextProcessor.from_pretrained(MODEL_ID)
 model = LlavaNextForConditionalGeneration.from_pretrained(
-    MODEL_ID, 
-    torch_dtype=dtype,
-    device_map="auto",
-    low_cpu_mem_usage=True
+    MODEL_ID, torch_dtype=dtype, device_map="auto", low_cpu_mem_usage=True
 )
 
 image = Image.open("assets/screenshot.png").convert("RGB")
@@ -27,7 +24,9 @@ conversation = [
         "role": "user",
         "content": [
             {"type": "image"},
-            {"type": "text", "text": """You are a luxury real estate agent providing a detailed property description. Analyze this interior space with meticulous attention to detail:
+            {
+                "type": "text",
+                "text": """You are a luxury real estate agent providing a detailed property description. Analyze this interior space with meticulous attention to detail:
 
 **Architectural Features**: Ceiling height, crown molding, baseboards, window treatments, flooring type and condition, wall textures, built-ins, archways, columns
 
@@ -47,7 +46,8 @@ conversation = [
 
 **Condition & Quality**: Signs of luxury, craftsmanship details, any wear or aging, maintenance level
 
-Write multiple detailed paragraphs painting a vivid picture that would help someone visualize this space without seeing it."""},
+Write multiple detailed paragraphs painting a vivid picture that would help someone visualize this space without seeing it.""",
+            },
         ],
     },
 ]
@@ -67,7 +67,7 @@ with torch.no_grad():
     )
 
 # Decode only the generated portion
-generated_tokens = output[0][inputs['input_ids'].shape[1]:]
+generated_tokens = output[0][inputs["input_ids"].shape[1] :]
 description = processor.decode(generated_tokens, skip_special_tokens=True)
 
 print(f"\n=== LLaVA Detailed Description ===\n{description}\n========================")

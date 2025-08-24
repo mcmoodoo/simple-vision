@@ -43,7 +43,7 @@ for prompt in prompts:
         return_tensors="pt",
         padding="longest",
     ).to(device)
-    
+
     with torch.no_grad():
         generated_ids = model.generate(
             **inputs,
@@ -52,21 +52,23 @@ for prompt in prompts:
             temperature=0.7,
             top_p=0.95,
         )
-    
+
     # Decode only the generated portion
     generated_text = processor.batch_decode(
-        generated_ids[:, inputs["input_ids"].shape[1]:],
+        generated_ids[:, inputs["input_ids"].shape[1] :],
         skip_special_tokens=True,
-        clean_up_tokenization_spaces=True
+        clean_up_tokenization_spaces=True,
     )[0]
-    
+
     full_description.append(f"**{prompt.capitalize()}**\n{generated_text}\n")
     print(f"Completed: {prompt}")
 
 # Combine all descriptions
 combined_description = "\n".join(full_description)
 
-print(f"\n=== PaliGemma Detailed Description ===\n{combined_description}\n========================")
+print(
+    f"\n=== PaliGemma Detailed Description ===\n{combined_description}\n========================"
+)
 
 with open("paligemma_description.txt", "w", encoding="utf-8") as f:
     f.write(combined_description + "\n")

@@ -17,7 +17,7 @@ model = AutoModelForCausalLM.from_pretrained(
     torch_dtype=dtype,
     device_map="auto",
     trust_remote_code=True,
-    low_cpu_mem_usage=True
+    low_cpu_mem_usage=True,
 )
 
 image = Image.open("assets/screenshot.png").convert("RGB")
@@ -41,11 +41,7 @@ Write at least 4-5 substantial paragraphs with rich, descriptive language that c
 
 # CogVLM2 specific formatting
 query = f"Human: {prompt}\nAssistant:"
-inputs = model.build_conversation_input_ids(
-    tokenizer,
-    query=query,
-    images=[image]
-)
+inputs = model.build_conversation_input_ids(tokenizer, query=query, images=[image])
 
 # Move only tensor inputs to device
 for k, v in inputs.items():
@@ -63,7 +59,9 @@ with torch.no_grad():
     )
 
 description = tokenizer.decode(outputs[0], skip_special_tokens=True)
-print(f"\n=== CogVLM2 Detailed Description ===\n{description}\n========================")
+print(
+    f"\n=== CogVLM2 Detailed Description ===\n{description}\n========================"
+)
 
 with open("cogvlm_description.txt", "w", encoding="utf-8") as f:
     f.write(description + "\n")

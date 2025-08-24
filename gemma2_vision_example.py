@@ -3,7 +3,7 @@ from PIL import Image
 from transformers import AutoProcessor, LlavaForConditionalGeneration
 
 # Gemma-2-based vision model (using LLaVA architecture with Gemma backbone)
-# Note: There isn't a standalone "Gemma3 12B vision" model, but we can use 
+# Note: There isn't a standalone "Gemma3 12B vision" model, but we can use
 # models that incorporate Gemma architecture for vision tasks
 
 MODEL_ID = "TIGER-Lab/Mantis-8B-siglip-llama3"  # Alternative powerful vision model
@@ -17,10 +17,7 @@ print(f"Device: {device}, dtype: {dtype}")
 
 processor = AutoProcessor.from_pretrained(MODEL_ID)
 model = LlavaForConditionalGeneration.from_pretrained(
-    MODEL_ID,
-    torch_dtype=dtype,
-    device_map="auto",
-    low_cpu_mem_usage=True
+    MODEL_ID, torch_dtype=dtype, device_map="auto", low_cpu_mem_usage=True
 )
 
 image = Image.open("assets/screenshot.png").convert("RGB")
@@ -28,10 +25,12 @@ image = Image.open("assets/screenshot.png").convert("RGB")
 # Comprehensive property analysis prompt
 conversation = [
     {
-        "role": "user", 
+        "role": "user",
         "content": [
             {"type": "image"},
-            {"type": "text", "text": """You are an expert interior designer analyzing a property photograph. Provide an exhaustive analysis covering:
+            {
+                "type": "text",
+                "text": """You are an expert interior designer analyzing a property photograph. Provide an exhaustive analysis covering:
 
 **OPENING IMPRESSION**
 Describe your immediate reaction to the space - the overall ambiance, style period, and quality level. What lifestyle does this space suggest?
@@ -91,18 +90,15 @@ For each piece of furniture visible:
 - Maintenance and condition
 - Approximate market positioning
 
-Write 5-6 detailed paragraphs that would allow someone to perfectly visualize and recreate this space."""},
-        ]
+Write 5-6 detailed paragraphs that would allow someone to perfectly visualize and recreate this space.""",
+            },
+        ],
     }
 ]
 
 # Process the conversation
 text_prompt = processor.apply_chat_template(conversation, add_generation_prompt=True)
-inputs = processor(
-    text=text_prompt,
-    images=[image],
-    return_tensors="pt"
-).to(device)
+inputs = processor(text=text_prompt, images=[image], return_tensors="pt").to(device)
 
 print("Generating comprehensive interior analysis...")
 with torch.no_grad():
@@ -116,7 +112,7 @@ with torch.no_grad():
     )
 
 # Decode only the generated portion
-generated_tokens = output_ids[0][inputs['input_ids'].shape[1]:]
+generated_tokens = output_ids[0][inputs["input_ids"].shape[1] :]
 description = processor.decode(generated_tokens, skip_special_tokens=True)
 
 print(f"\n=== Detailed Interior Analysis ===\n{description}\n========================")
