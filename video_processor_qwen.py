@@ -234,7 +234,7 @@ Be extremely precise and detailed.""",
 
 
 def main():
-    video_url = "https://mcmoodoo.s3.us-east-1.amazonaws.com/super_hallway.mp4"
+    video_url = "https://mcmoodoo-playground.s3.us-east-1.amazonaws.com/super_hallway.mp4"
 
     # Download or use local video
     if video_url.startswith("http"):
