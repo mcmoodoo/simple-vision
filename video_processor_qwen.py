@@ -153,7 +153,7 @@ Be extremely precise - each timestamp should describe ONLY what is visible at th
 
 
 def extract_frames_for_backup(
-    video_path: str, fps: float = 1.0, max_frames: int = 30
+    video_path: str, fps: float = 1.0, max_frames: int = None
 ) -> Tuple[List[Image.Image], List[float]]:
     """Extract frames using av library as backup for frame-by-frame processing"""
     frames = []
@@ -170,21 +170,22 @@ def extract_frames_for_backup(
 
     frame_count = 0
     for frame in container.decode(stream):
-        if frame_count % frame_interval == 0 and len(frames) < max_frames:
-            img = frame.to_image()
+        if frame_count % frame_interval == 0:
+            if max_frames is None or len(frames) < max_frames:
+                img = frame.to_image()
 
-            # Resize for efficiency
-            if img.height > 720:
-                aspect_ratio = img.width / img.height
-                new_height = 720
-                new_width = int(new_height * aspect_ratio)
-                img = img.resize((new_width, new_height), Image.LANCZOS)
+                # Resize for efficiency
+                if img.height > 720:
+                    aspect_ratio = img.width / img.height
+                    new_height = 720
+                    new_width = int(new_height * aspect_ratio)
+                    img = img.resize((new_width, new_height), Image.LANCZOS)
 
-            frames.append(img)
-            timestamps.append(float(frame.time))
+                frames.append(img)
+                timestamps.append(float(frame.time))
 
         frame_count += 1
-        if len(frames) >= max_frames:
+        if max_frames is not None and len(frames) >= max_frames:
             break
 
     container.close()
