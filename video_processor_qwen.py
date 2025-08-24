@@ -1,16 +1,10 @@
 import os
-import subprocess
-import tempfile
-import shutil
-from pathlib import Path
-from typing import List, Dict, Tuple
+from typing import List, Tuple
 import torch
 from PIL import Image
-import numpy as np
-from transformers import Qwen2VLForConditionalGeneration, AutoTokenizer, AutoProcessor
+from transformers import Qwen2VLForConditionalGeneration, AutoProcessor
 from qwen_vl_utils import process_vision_info
 import requests
-from io import BytesIO
 import av
 
 MODEL_ID = "Qwen/Qwen2-VL-7B-Instruct"
@@ -283,7 +277,7 @@ def main():
         # Clean up
         if video_url.startswith("http") and os.path.exists(video_path):
             os.remove(video_path)
-            print(f"Cleaned up temporary video file")
+            print("Cleaned up temporary video file")
 
 
 if __name__ == "__main__":

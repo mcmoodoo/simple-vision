@@ -25,7 +25,7 @@ image = Image.open("assets/screenshot.png").convert("RGB")
 
 prompt = "Question: Describe this property interior in vivid detail. What furniture is visible? What are the architectural features? Describe the lighting, colors, textures, materials, decor, and spatial arrangement. What style is the room? What mood does it convey? Answer:"
 
-print(f"Processing image with prompt...")
+print("Processing image with prompt...")
 inputs = processor(images=image, text=prompt, return_tensors="pt").to(
     device, dtype=dtype
 )
