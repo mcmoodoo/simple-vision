@@ -10,3 +10,5 @@ wheels/
 .venv
 
 assets/*.mp4
+
+assets/videos/
