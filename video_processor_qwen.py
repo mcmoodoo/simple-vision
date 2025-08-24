@@ -6,6 +6,8 @@ from transformers import Qwen2VLForConditionalGeneration, AutoProcessor
 from qwen_vl_utils import process_vision_info
 import requests
 import av
+import json
+from pathlib import Path
 
 MODEL_ID = "Qwen/Qwen2-VL-7B-Instruct"
 
@@ -33,8 +35,31 @@ def download_video(url: str, output_path: str) -> str:
     return output_path
 
 
+def migrate_preprocessor_config():
+    """Migrate preprocessor.json to video_preprocessor.json if needed"""
+    cache_dir = Path.home() / ".cache" / "huggingface" / "hub"
+    
+    # Find model cache directories
+    for model_dir in cache_dir.glob("models--*"):
+        if "Qwen2-VL" in model_dir.name:
+            for snapshot_dir in model_dir.glob("snapshots/*"):
+                old_config = snapshot_dir / "preprocessor.json"
+                new_config = snapshot_dir / "video_preprocessor.json"
+                
+                if old_config.exists() and not new_config.exists():
+                    print(f"Migrating {old_config} to {new_config}")
+                    with open(old_config, 'r') as f:
+                        config_data = json.load(f)
+                    with open(new_config, 'w') as f:
+                        json.dump(config_data, f, indent=2)
+                    print(f"Config migrated successfully")
+
+
 def process_video_with_qwen(video_path: str, fps: float = 1.0) -> str:
     """Process video with Qwen2-VL model which has native video support"""
+    
+    # Migrate config if needed
+    migrate_preprocessor_config()
 
     print(f"Loading Qwen2-VL model: {MODEL_ID}")
     print(f"Device: {device}, dtype: {dtype}")
@@ -43,7 +68,7 @@ def process_video_with_qwen(video_path: str, fps: float = 1.0) -> str:
         MODEL_ID, torch_dtype=dtype, device_map="auto" if device == "cuda" else None
     ).to(device)
 
-    processor = AutoProcessor.from_pretrained(MODEL_ID)
+    processor = AutoProcessor.from_pretrained(MODEL_ID, use_fast=True)
 
     print("Model loaded successfully!")
 
@@ -258,7 +283,7 @@ def main():
                 torch_dtype=dtype,
                 device_map="auto" if device == "cuda" else None,
             ).to(device)
-            processor = AutoProcessor.from_pretrained(MODEL_ID)
+            processor = AutoProcessor.from_pretrained(MODEL_ID, use_fast=True)
 
             description = process_video_framewise(video_path, model, processor, fps=1.0)
 
