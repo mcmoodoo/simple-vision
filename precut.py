@@ -16,44 +16,45 @@ import imagehash
 from tqdm import tqdm
 
 # PySceneDetect
-from scenedetect import VideoManager, SceneManager
+from scenedetect import open_video, SceneManager
 from scenedetect.detectors import ContentDetector
 
 # -----------------------------
 # CONFIG (tune to your footage)
 # -----------------------------
-INPUT_ROOT = Path("videos")              # root containing subfolders/videos
+INPUT_ROOT = Path("assets/videos/Clubhouse")              # root containing subfolders/videos
+DEBUG_SINGLE = None  # Set to filename to process only that file
 OUTPUT_ROOT = Path("out")                # where we store intermediates/exports
 FINAL_VIDEO = OUTPUT_ROOT / "output.mp4" # final concatenated result
 
 # Scene detection (PySceneDetect ContentDetector threshold; 27–35 works for interiors)
-SCENE_THRESHOLD = 27.0
-MIN_SCENE_LEN_S = 1.0  # ignore scenes shorter than this
+SCENE_THRESHOLD = 10.0  # Lowered from 27.0 to detect more scenes (lower = more sensitive)
+MIN_SCENE_LEN_S = 0.3   # Lowered from 1.0 to keep shorter scenes
 
 # Frame sampling within a scene for metrics
-SAMPLE_FRAMES_FOR_SHAKE = 10        # evenly spaced frames to estimate motion
-DOWNSCALE_WIDTH = 960               # speed-up for metrics (keep aspect)
+SAMPLE_FRAMES_FOR_SHAKE = 5         # reduced from 10 for speed
+DOWNSCALE_WIDTH = 640                # reduced from 960 for speed
 
 # Hard drop thresholds
-BLUR_VAR_LAPLACE_MIN = 120.0        # lower -> blurrier → drop
-MEAN_BRIGHT_DIM_MAX = 60            # too dim if mean < this
-MEAN_BRIGHT_BRIGHT_MIN = 200        # too bright if mean > this
-TILT_DEGREES_MAX = 3.0              # crooked if > this (architecture)
-SHAKE_STD_MAX = 1.8                 # optical-flow displacement std threshold
+BLUR_VAR_LAPLACE_MIN = 50.0         # lower -> blurrier → drop (was 120)
+MEAN_BRIGHT_DIM_MAX = 30            # too dim if mean < this (was 60)
+MEAN_BRIGHT_BRIGHT_MIN = 240        # too bright if mean > this (was 200)
+TILT_DEGREES_MAX = 10.0             # crooked if > this (was 3.0)
+SHAKE_STD_MAX = 5.0                 # optical-flow displacement std threshold (was 1.8)
 
 # Soft penalties (compose into score)
-COLOR_CAST_ABS_MEAN_MAX = 6.0       # |a-128| or |b-128| > -> penalty
-EDGE_RATIO_MAX = 0.18                # clutter proxy
-ENTROPY_MAX = 5.3
-BLOCKINESS_RATIO_MAX = 0.22
-MIXED_LIGHT_STD_MAX = 12.0
+COLOR_CAST_ABS_MEAN_MAX = 10.0      # |a-128| or |b-128| > -> penalty (was 6.0)
+EDGE_RATIO_MAX = 0.25                # clutter proxy (was 0.18)
+ENTROPY_MAX = 6.0                    # (was 5.3)
+BLOCKINESS_RATIO_MAX = 0.35          # (was 0.22)
+MIXED_LIGHT_STD_MAX = 20.0           # (was 12.0)
 
 # Keep if not hard-dropped and score >= this
-KEEP_SCORE_MIN = 0.30
+KEEP_SCORE_MIN = 0.20                # (was 0.30)
 
 # Export settings
-CRF = 18
-PRESET = "medium"
+CRF = 23  # Higher = smaller file, faster encoding (was 18)
+PRESET = "faster"  # Faster encoding (was "medium")
 AUDIO = True
 
 # -----------------------------
@@ -88,7 +89,8 @@ def get_video_fps_nframes(path: str) -> Tuple[float, int]:
 def read_frame_at_time(path: str, t_s: float) -> np.ndarray:
     cap = cv2.VideoCapture(path)
     fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
-    frame_index = max(0, int(t_s * fps))
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    frame_index = min(max(0, int(t_s * fps)), total_frames - 1)
     cap.set(cv2.CAP_PROP_POS_FRAMES, frame_index)
     ok, frame = cap.read()
     cap.release()
@@ -199,14 +201,11 @@ class Scene:
     end_s: float
 
 def detect_scenes(video_path: str) -> List[Scene]:
-    vm = VideoManager([video_path])
+    video = open_video(video_path)
     sm = SceneManager()
     sm.add_detector(ContentDetector(threshold=SCENE_THRESHOLD))
-    vm.set_downscale_factor()
-    vm.start()
-    sm.detect_scenes(frame_source=vm)
+    sm.detect_scenes(video)
     scene_list = sm.get_scene_list()
-    vm.release()
 
     scenes: List[Scene] = []
     for s in scene_list:
@@ -214,6 +213,15 @@ def detect_scenes(video_path: str) -> List[Scene]:
         end_s = s[1].get_seconds()
         if end_s - start_s >= MIN_SCENE_LEN_S:
             scenes.append(Scene(start_s, end_s))
+    
+    # If no scenes detected, treat the entire video as one scene
+    if not scenes:
+        fps, nframes = get_video_fps_nframes(video_path)
+        if nframes > 0 and fps > 0:
+            total_duration = nframes / fps
+            if total_duration >= MIN_SCENE_LEN_S:
+                scenes.append(Scene(0.0, total_duration))
+    
     return scenes
 
 # -----------------------------
@@ -234,7 +242,7 @@ def score_scene(video_path: str, scene: Scene) -> Dict:
     is_blocky = blockiness_flag(gray)
     cluttered, edge_ratio, ent = clutter_flags(gray)
     is_mixed = mixed_light_flag(frm)
-    is_shaky = shake_flag(video_path, scene.start_s, scene.end_s)
+    is_shaky = False  # Temporarily disabled for speed - shake_flag(video_path, scene.start_s, scene.end_s)
 
     # hard drop
     hard_drop = any([too_dim, too_bright, is_blur, is_crooked, is_shaky])
@@ -318,11 +326,17 @@ def main():
     ensure_dirs(OUTPUT_ROOT)
 
     videos = []
-    for p in sorted(INPUT_ROOT.rglob("*.mp4")):
-        videos.append(p)
-    for p in sorted(INPUT_ROOT.rglob("*.MP4")):
-        if p not in videos:
+    if 'DEBUG_SINGLE' in globals() and DEBUG_SINGLE:
+        # Debug mode: process only the specified file
+        p = INPUT_ROOT / DEBUG_SINGLE
+        if p.exists():
             videos.append(p)
+    else:
+        for p in sorted(INPUT_ROOT.rglob("*.mp4")):
+            videos.append(p)
+        for p in sorted(INPUT_ROOT.rglob("*.MP4")):
+            if p not in videos:
+                videos.append(p)
 
     if not videos:
         print(f"No videos found under {INPUT_ROOT}")
@@ -359,17 +373,24 @@ def main():
     # Deduplicate near-duplicate clips by pHash (optional simple pass)
     uniq = []
     seen = []
-    for r, pth in zip(rows, kept_exports):
-        if not r.get("keep"):
-            continue
-        h = r.get("mid_hash")
-        if any(imagehash.hex_to_hash(h) - imagehash.hex_to_hash(x) < 6 for x in seen):
-            # duplicate → mark as dropped
-            r["keep"] = False
-            r["reason_dropped"] = "near-duplicate"
-            continue
-        seen.append(h)
-        uniq.append(pth)
+    for clip_path in kept_exports:
+        # Find corresponding row
+        matching_row = None
+        for r in rows:
+            if r.get("keep") and f"{Path(r['video']).stem}_scene{r['scene_index']:04d}.mp4" == clip_path.name:
+                matching_row = r
+                break
+        
+        if matching_row:
+            h = matching_row.get("mid_hash")
+            if h and any(imagehash.hex_to_hash(h) - imagehash.hex_to_hash(x) < 6 for x in seen if x):
+                # duplicate → mark as dropped
+                matching_row["keep"] = False
+                matching_row["reason_dropped"] = "near-duplicate"
+                continue
+            if h:
+                seen.append(h)
+            uniq.append(clip_path)
     kept_exports = uniq
 
     # Write CSV report

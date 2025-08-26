@@ -12,3 +12,4 @@ wheels/
 assets/*.mp4
 
 assets/videos/
+out/

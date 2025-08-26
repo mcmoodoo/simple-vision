@@ -7,8 +7,17 @@ requires-python = ">=3.11"
 dependencies = [
     "accelerate>=1.10.0",
     "av>=15.0.0",
+    "imagehash>=4.3.2",
+    "numpy>=2.3.2",
+    "opencv-python-headless>=4.11.0.86",
+    "pandas>=2.3.2",
     "pillow>=11.3.0",
+    "pyttsx3>=2.99",
+    "scenedetect>=0.6.6",
+    "soundfile>=0.13.1",
     "torch>=2.8.0",
     "torchvision>=0.23.0",
+    "tqdm>=4.67.1",
     "transformers>=4.55.2",
+    "tts",
 ]
